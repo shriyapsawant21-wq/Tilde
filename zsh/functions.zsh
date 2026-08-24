@@ -32,7 +32,7 @@ frg() {
 # Open a project in a stable, project-named tmux session.
 dev() {
   local project session
-  _tilde_require zoxide fzf tmux || return 1
+  _tilde_require zoxide fzf tmux sha256sum || return 1
 
   if (( $# > 0 )); then
     project=$(zoxide query -- "$@" 2>/dev/null) ||
@@ -46,9 +46,8 @@ dev() {
     return 1
   }
 
-  session=${project:t}
-  session=${session//[^A-Za-z0-9_-]/_}
-  [[ -n "$session" ]] || session=project
+  project=${project:A}
+  session=$(_tilde_session_name "$project") || return 1
 
   if [[ -n "$TMUX" ]]; then
     tmux has-session -t "=$session" 2>/dev/null ||
@@ -57,6 +56,17 @@ dev() {
   else
     tmux new-session -A -s "$session" -c "$project"
   fi
+}
+
+_tilde_session_name() {
+  local project_path base digest
+  project_path=${1:A}
+  base=${project_path:t}
+  base=${base//[^A-Za-z0-9_-]/_}
+  [[ -n "$base" ]] || base=project
+  digest=$(print -rn -- "$project_path" | sha256sum) || return 1
+  digest=${digest%% *}
+  print -r -- "${base}-${digest[1,12]}"
 }
 
 _tilde_require() {

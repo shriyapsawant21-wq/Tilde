@@ -13,7 +13,7 @@
 | yq | YAML processing | Installed as a focused data utility; no alias changes its interface |
 | lazygit | Git TUI | Available as `lg` and `<leader>gg` in Neovim |
 | Neovim | Editor | Set as `EDITOR` and `VISUAL`; includes plugin-free file/text pickers and LSP mappings |
-| tmux | Sessions | Provides persistent project sessions and Neovim-aware navigation |
+| tmux | Sessions | Provides path-unique persistent project sessions and Neovim-aware navigation |
 | Starship | Optional prompt | Shows directory, Git state, failure status, and a small prompt character |
 
 ## Optional shell enhancements

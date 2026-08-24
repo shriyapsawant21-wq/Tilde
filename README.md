@@ -93,7 +93,7 @@ exec zsh
 | --- | --- |
 | `ff [query]` | Find a file with fd and fzf, preview it with bat, and open it in Neovim |
 | `frg <query>` | Search with ripgrep, preview a selected match, and open Neovim at its line |
-| `dev [project]` | Select a zoxide directory and create or attach to its named tmux session |
+| `dev [project]` | Select a zoxide directory and create or attach to a path-unique tmux session |
 | `z <directory>` | Jump to a frequently used directory through zoxide |
 | `l` | Compact eza listing |
 | `ll` | Detailed eza listing with Git information |

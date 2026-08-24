@@ -56,6 +56,13 @@ second_backups=$(find "$XDG_STATE_HOME/tilde/backups" -type f | wc -l)
 [[ "$first_backups" -eq "$second_backups" ]]
 
 if command -v zsh >/dev/null 2>&1; then
+  mkdir -p -- "$test_root/one/project" "$test_root/two/project"
+  zsh -d -c '
+    source "$1"
+    first=$(_tilde_session_name "$2/one/project")
+    second=$(_tilde_session_name "$2/two/project")
+    [[ "$first" != "$second" ]]
+  ' _ "$ROOT/zsh/functions.zsh" "$test_root"
   ZDOTDIR="$HOME" zsh -d -i -c '[[ -n "$TILDE_ROOT" ]] && [[ -r "$TILDE_ROOT/zsh/functions.zsh" ]]'
 fi
 
