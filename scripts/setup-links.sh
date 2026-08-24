@@ -82,7 +82,7 @@ rollback_backups=()
 
 rollback_setup() {
   local original_status=$1 index target source_path backup
-  trap - ERR
+  trap - ERR INT TERM HUP
   set +o errexit
   for (( index=${#rollback_targets[@]} - 1; index >= 0; index-- )); do
     target=${rollback_targets[$index]}
@@ -105,6 +105,9 @@ if (( dry_run == 0 )); then
   mkdir -p -- "$TILDE_STATE_DIR"
   : > "$manifest_tmp"
   trap 'rollback_setup $?' ERR
+  trap 'rollback_setup 130' INT
+  trap 'rollback_setup 143' TERM
+  trap 'rollback_setup 129' HUP
 fi
 
 for index in "${!sources[@]}"; do
@@ -149,6 +152,6 @@ done
 
 if (( dry_run == 0 )); then
   mv -- "$manifest_tmp" "$TILDE_MANIFEST"
-  trap - ERR
+  trap - ERR INT TERM HUP
   success "Recorded managed links in $TILDE_MANIFEST"
 fi

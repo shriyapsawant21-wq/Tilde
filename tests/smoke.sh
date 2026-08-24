@@ -12,6 +12,7 @@ for file in install.sh uninstall.sh scripts/*.sh tests/*.sh; do
 done
 
 bash ./tests/compat-ownership.sh >/dev/null
+bash ./tests/interrupt-rollback.sh >/dev/null
 
 test_root=$(mktemp -d /tmp/tilde-test.XXXXXX)
 case "$test_root" in
@@ -88,7 +89,13 @@ if command -v zsh >/dev/null 2>&1; then
     second=$(_tilde_session_name "$2/two/project")
     [[ "$first" != "$second" ]]
   ' _ "$ROOT/zsh/functions.zsh" "$test_root"
-  ZDOTDIR="$HOME" zsh -d -i -c '[[ -n "$TILDE_ROOT" ]] && [[ -r "$TILDE_ROOT/zsh/functions.zsh" ]]'
+  mkdir -p -- "$HOME/.atuin/bin"
+  printf '%s\n' 'export TILDE_TEST_ATUIN_ENV_LOADED=1' 'atuin() { :; }' > "$HOME/.atuin/bin/env"
+  ZDOTDIR="$HOME" zsh -d -i -c '
+    [[ -n "$TILDE_ROOT" ]] &&
+    [[ -r "$TILDE_ROOT/zsh/functions.zsh" ]] &&
+    [[ "$TILDE_TEST_ATUIN_ENV_LOADED" == 1 ]]
+  '
 fi
 
 # A user replacement must survive uninstall.

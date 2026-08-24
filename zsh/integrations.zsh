@@ -31,6 +31,11 @@ if command -v zoxide >/dev/null 2>&1; then
   eval "$(zoxide init zsh --cmd z)"
 fi
 
+# The official user-local Atuin installer exposes its binary through this file.
+# Load it only when present, then keep initialization guarded and single-shot.
+if [[ -r "$HOME/.atuin/bin/env" ]]; then
+  source "$HOME/.atuin/bin/env"
+fi
 if command -v atuin >/dev/null 2>&1; then
   eval "$(atuin init zsh --disable-up-arrow)"
 fi
