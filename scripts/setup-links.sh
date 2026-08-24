@@ -34,6 +34,18 @@ if command_exists batcat && { ! command_exists bat || [[ -L "$HOME/.local/bin/ba
   targets+=("$HOME/.local/bin/bat")
 fi
 
+# Validate the complete operation before changing the filesystem. This prevents
+# an invalid later target from leaving earlier links installed but unrecorded.
+for index in "${!sources[@]}"; do
+  source_path=${sources[$index]}
+  target=${targets[$index]}
+  [[ -e "$source_path" ]] || die "Missing managed source: $source_path"
+  case "$target" in
+    "$HOME"/*) ;;
+    *) die "Refusing to manage a path outside HOME: $target" ;;
+  esac
+done
+
 backup_root="$TILDE_STATE_DIR/backups/$(date +%Y%m%d-%H%M%S)"
 manifest_tmp="${TILDE_MANIFEST}.tmp.$$"
 
@@ -45,14 +57,12 @@ fi
 for index in "${!sources[@]}"; do
   source_path=${sources[$index]}
   target=${targets[$index]}
-  [[ -e "$source_path" ]] || die "Missing managed source: $source_path"
 
   if [[ -L "$target" && "$(readlink -- "$target")" == "$source_path" ]]; then
     success "Already linked: $target"
   else
     if [[ -e "$target" || -L "$target" ]]; then
       relative=${target#"$HOME"/}
-      [[ "$relative" != "$target" ]] || die "Refusing to replace a path outside HOME: $target"
       backup="$backup_root/$relative"
       if (( dry_run == 1 )); then
         info "Would back up $target to $backup"
