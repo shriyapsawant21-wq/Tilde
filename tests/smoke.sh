@@ -14,6 +14,7 @@ done
 bash ./tests/compat-ownership.sh >/dev/null
 bash ./tests/interrupt-rollback.sh >/dev/null
 bash ./tests/interrupt-move-rollback.sh >/dev/null
+bash ./tests/manifest-commit-signal.sh >/dev/null
 
 test_root=$(mktemp -d /tmp/tilde-test.XXXXXX)
 case "$test_root" in

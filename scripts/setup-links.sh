@@ -151,7 +151,15 @@ for index in "${!sources[@]}"; do
 done
 
 if (( dry_run == 0 )); then
-  mv -- "$manifest_tmp" "$TILDE_MANIFEST"
-  trap - ERR INT TERM HUP
+  # Publishing the manifest is the commit point. Ignore interruption signals
+  # across the atomic rename and trap removal so rollback cannot run after the
+  # new ownership records become live. ERR remains active if the rename fails.
+  trap '' INT TERM HUP
+  if mv -- "$manifest_tmp" "$TILDE_MANIFEST"; then
+    trap - ERR INT TERM HUP
+  else
+    status=$?
+    rollback_setup "$status"
+  fi
   success "Recorded managed links in $TILDE_MANIFEST"
 fi
