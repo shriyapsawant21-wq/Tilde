@@ -23,7 +23,3 @@ unset _tilde_zcompdump
 source "$TILDE_ROOT/zsh/aliases.zsh"
 source "$TILDE_ROOT/zsh/functions.zsh"
 source "$TILDE_ROOT/zsh/integrations.zsh"
-
-. "$HOME/.atuin/bin/env"
-
-eval "$(atuin init zsh)"
