@@ -1,0 +1,17 @@
+# Local-only: no account, sync, or network update checks.
+auto_sync = false
+update_check = false
+
+search_mode = "fuzzy"
+filter_mode = "global"
+filter_mode_shell_up_key_binding = "session"
+style = "compact"
+inline_height = 20
+show_preview = true
+enter_accept = true
+secrets_filter = true
+
+[stats]
+common_subcommands = [
+  "apt", "cargo", "docker", "git", "go", "kubectl", "npm", "pnpm", "systemctl",
+]

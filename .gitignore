@@ -1,0 +1,16 @@
+# Local test and runtime artifacts
+.tmp/
+.test-home/
+*.log
+*.swp
+*.swo
+*~
+
+# Editor metadata
+.idea/
+.vscode/
+
+# macOS and Windows metadata
+.DS_Store
+Thumbs.db
+Desktop.ini
