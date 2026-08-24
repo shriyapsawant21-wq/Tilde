@@ -41,6 +41,31 @@ grep -q 'existing user config' "$HOME/.zshrc"
 [[ ! -e "$XDG_STATE_HOME/tilde/links.manifest" ]]
 export XDG_CONFIG_HOME="$safe_config_home"
 
+# A failure after earlier targets changed must restore them and leave no manifest.
+mkdir -p -- "$XDG_CONFIG_HOME"
+printf '%s\n' 'blocks the atuin directory' > "$XDG_CONFIG_HOME/atuin"
+if bash ./scripts/setup-links.sh >/dev/null 2>&1; then
+  printf 'Expected setup to fail when a configuration parent is a file\n' >&2
+  exit 1
+fi
+[[ ! -L "$HOME/.zshrc" ]]
+grep -q 'existing user config' "$HOME/.zshrc"
+[[ ! -e "$HOME/.tmux.conf" ]]
+[[ ! -e "$XDG_CONFIG_HOME/nvim" ]]
+[[ ! -e "$XDG_STATE_HOME/tilde/links.manifest" ]]
+rm -- "$XDG_CONFIG_HOME/atuin"
+
+# Ordinary configuration sources may never use the missing-source exception.
+missing_repo="$test_root/missing-source-repo"
+mkdir -p -- "$missing_repo"
+cp -R -- scripts zsh tmux nvim atuin starship "$missing_repo/"
+rm -- "$missing_repo/zsh/.zshrc"
+if bash "$missing_repo/scripts/setup-links.sh" >/dev/null 2>&1; then
+  printf 'Expected setup to reject a missing regular configuration source\n' >&2
+  exit 1
+fi
+[[ ! -e "$XDG_STATE_HOME/tilde/links.manifest" ]]
+
 bash ./scripts/setup-links.sh >/dev/null
 first_links=$(wc -l < "$XDG_STATE_HOME/tilde/links.manifest")
 first_backups=$(find "$XDG_STATE_HOME/tilde/backups" -type f | wc -l)
