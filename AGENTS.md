@@ -10,7 +10,7 @@ Read `README.md` first. When present, consult relevant files in `docs/` before c
 
 ## Current phase
 
-The repository is currently in the documentation and design phase. Do not implement the terminal environment, create its planned file structure, or install tools unless the user explicitly asks to begin implementation. Keep documentation honest about what exists today versus what is planned.
+The repository contains a V1 implementation and is in cross-distribution validation. Keep documentation honest about what has been tested, preserve the existing ownership model, and prefer fixes or focused refinements over unrequested feature expansion. Do not install Tilde onto a contributor's real home directory unless explicitly requested; use `tests/smoke.sh` or another isolated home for lifecycle tests.
 
 ## Non-negotiable rules
 

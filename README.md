@@ -2,40 +2,27 @@
 
 > Forge your terminal.
 
-Tilde is a planned, reproducible, local-first developer terminal environment for Linux and WSL. It will bring a focused set of open-source CLI and TUI tools together behind one safe, idempotent setup—without replacing your terminal emulator or shell.
+Tilde is a reproducible, local-first terminal development environment for Linux and WSL. It configures a focused set of open-source CLI and TUI tools as one cohesive workflow without replacing your terminal emulator or shell.
 
-> **Project status:** documentation and design phase. The installer and configurations described below have not been implemented yet.
-
-## Why Tilde?
-
-Excellent terminal tools are easy to install individually but harder to make cohesive, portable, and safe. Tilde aims to provide a fast, keyboard-driven environment that can be cloned onto a fresh machine and configured with one command while preserving existing dotfiles.
-
-The project is guided by a few principles:
-
-- Local-first: no accounts, cloud services, paid APIs, telemetry, or AI APIs.
-- Safe: existing configuration is backed up and never blindly overwritten.
-- Reproducible: setup is scripted, documented, and idempotent.
-- Focused: every dependency has a clear purpose; integrations matter more than quantity.
-- Maintainable: lightweight Zsh and Neovim configurations instead of large frameworks.
+No account, cloud service, telemetry, paid API, or AI API is required. Atuin history stays local.
 
 ## Demo
 
-<!-- Replace this placeholder with a screenshot or short terminal recording once V1 is implemented. -->
+<!-- Add a screenshot or terminal recording after validating V1 on representative Linux and WSL systems. -->
 
-_Demo coming with the first working release._
+_Screenshot and terminal demo coming after cross-distribution validation._
 
-## Planned features
+## Features
 
-- Local shell history search with Atuin and `Ctrl+R`
-- Smart directory navigation with zoxide
-- Fuzzy file, directory, and text search using fzf, fd, ripgrep, and bat
-- Predictable directory-listing aliases powered by eza
-- JSON and YAML workflows with jq and yq
-- Git workflows through lazygit
-- A minimal, LSP-ready Neovim configuration
-- Persistent development sessions with tmux
-- A `dev <project>` workflow for opening projects in named tmux sessions
-- Safe installation, uninstallation, backups, and a readable health check
+- Safe, idempotent setup with timestamped backups before any conflicting path is replaced
+- Local fuzzy shell history through Atuin and `Ctrl+R`
+- Smart `z` navigation and project lookup through zoxide
+- Integrated file and text workflows using fd, ripgrep, fzf, bat, and Neovim
+- A focused set of eza, lazygit, and editor aliases
+- Persistent project sessions through `dev <project>` and tmux
+- Consistent `Ctrl+H/J/K/L` navigation across Neovim splits and tmux panes
+- Minimal, plugin-free Neovim configuration with built-in LSP-ready mappings
+- Readable dependency health check and conservative uninstaller
 
 ## Tool stack
 
@@ -53,122 +40,162 @@ _Demo coming with the first working release._
 | [lazygit](https://github.com/jesseduffield/lazygit) | Terminal Git interface |
 | [Neovim](https://neovim.io/) | Primary terminal editor |
 | [tmux](https://github.com/tmux/tmux) | Persistent sessions and workspaces |
+| [Starship](https://starship.rs/) | Small, optional contextual prompt |
 
-Zsh will be the primary shell. Starship may provide a small prompt if it adds enough value without hurting startup time.
+See [docs/tools.md](docs/tools.md) for how these tools interact.
 
-## Planned architecture
-
-The repository will use a conventional dotfiles layout with configuration grouped by tool and orchestration kept in auditable shell scripts:
+## Architecture
 
 ```text
 .
-├── README.md
-├── AGENTS.md
-├── LICENSE
-├── install.sh
-├── uninstall.sh
-├── zsh/
-├── tmux/
-├── nvim/
-├── atuin/
-├── starship/
-├── scripts/
-│   ├── install-tools.sh
-│   ├── setup-links.sh
-│   ├── health-check.sh
-│   └── backup-existing.sh
-└── docs/
-    ├── tools.md
-    ├── keybindings.md
-    └── architecture.md
+├── install.sh                 setup entry point
+├── uninstall.sh               managed-link removal
+├── zsh/                       shell, aliases, functions, integrations
+├── tmux/                      session and navigation configuration
+├── nvim/                      plugin-free Lua configuration
+├── atuin/                     local-only history configuration
+├── starship/                  minimal prompt
+├── scripts/                   packages, backups, links, health check
+├── tests/                     isolated lifecycle smoke test
+└── docs/                      architecture, tools, and keybindings
 ```
 
-This layout may evolve during implementation when a simpler structure improves safety or maintainability.
+Configuration remains in the repository and is linked into the home directory. Tilde records those links under `${XDG_STATE_HOME:-$HOME/.local/state}/tilde`; see [docs/architecture.md](docs/architecture.md) for the ownership and backup model.
 
 ## Installation
 
-Installation is not available yet. The planned entry point is:
+V1 supports Linux and WSL. Review the scripts, then run:
 
 ```sh
 ./install.sh
 ```
 
-The installer will target Linux and WSL first. It will detect the platform and available package manager, install missing tools where appropriate, back up conflicting configuration, create managed links, and summarize any manual follow-up. Running it repeatedly must be safe.
+The installer detects apt, dnf, pacman, or zypper, requests packages from configured distribution repositories, backs up conflicting configuration, and creates managed symlinks. Package installation may prompt for `sudo`; configuration itself does not need it.
 
-Do not run installation commands copied from this README until the scripts are present and reviewed.
+Useful modes:
 
-## Usage
+```sh
+./install.sh --dry-run       # preview links and backups; install nothing
+./install.sh --skip-tools    # configure only; install no system packages
+```
 
-The following interface is planned for V1:
+Tilde deliberately does not run third-party `curl | sh` installers. Some tools may be absent from an older distribution repository; the installer reports each unavailable package and continues. Install any remaining tools from their official package source, then run the health check.
 
-| Command | Planned behavior |
+Start a fresh shell after installation:
+
+```sh
+exec zsh
+```
+
+## Usage and custom commands
+
+| Command | Behavior |
 | --- | --- |
-| `ff` | Find a file with fd and fzf, with a bat preview |
-| `frg <query>` | Search text with ripgrep, preview a match, and open it in Neovim |
-| `dev <project>` | Find a project and create or attach to its tmux session |
+| `ff [query]` | Find a file with fd and fzf, preview it with bat, and open it in Neovim |
+| `frg <query>` | Search with ripgrep, preview a selected match, and open Neovim at its line |
+| `dev [project]` | Select a zoxide directory and create or attach to its named tmux session |
+| `z <directory>` | Jump to a frequently used directory through zoxide |
 | `l` | Compact eza listing |
-| `ll` | Detailed eza listing with useful Git information |
-| `la` | Listing including hidden files |
-| `lt` | Tree view |
-| `bcat` | View a file with bat without replacing `cat` |
+| `ll` | Detailed eza listing with Git information |
+| `la` | Detailed listing including hidden files |
+| `lt` | Two-level tree view |
+| `bcat` | View with bat while preserving normal `cat` |
 | `lg` | Open lazygit |
 | `v` | Open Neovim |
 
-`EDITOR` and `VISUAL` will both be set to `nvim`.
+`EDITOR` and `VISUAL` are set to `nvim`. File icons remain off unless `TILDE_ICONS=1` is exported before Zsh starts.
 
 ## Keybindings
 
-Exact bindings will be documented and tested during implementation. The intended defaults include:
+- `Ctrl+R` opens Atuin history search.
+- `Ctrl+H/J/K/L` moves across Neovim splits and tmux panes.
+- tmux uses `Ctrl+A` as its prefix.
+- Neovim uses `Space` as its leader; `<leader>ff`, `<leader>fg`, and `<leader>gg` open files, text search, and lazygit.
 
-- `Ctrl+R` for Atuin history search
-- Consistent navigation between tmux panes and Neovim splits
-- Standard tmux windows, splits, and mouse support
-
-Bindings will avoid surprising overrides and will be collected in `docs/keybindings.md`.
+The complete reference is in [docs/keybindings.md](docs/keybindings.md).
 
 ## Configuration
 
-Tilde will keep tool-specific configuration in this repository and link it into the appropriate user configuration directories. Machine-specific credentials and secrets must never be committed. Optional features such as icons will only be enabled when terminal and font support are available.
+Edit the tracked source files in this repository; linked user paths reflect changes immediately. Rerun `./install.sh --skip-tools` if a managed link is missing.
 
-Atuin will operate locally in V1; cloud sync and account setup will not be configured.
+Atuin is configured with sync and network update checks disabled. Zsh autosuggestions and syntax highlighting load only when their distribution packages are present. Starship is optional; a small native Zsh prompt is the fallback.
+
+Neovim does not install plugins or language servers. It provides fd/fzf file selection, ripgrep/fzf text selection, lazygit access, and standard mappings whenever a separately configured LSP client attaches.
 
 ## Updating
 
-The planned update workflow is to pull reviewed repository changes and rerun `./install.sh`. The installer must reconcile managed configuration without duplicating entries or damaging unrelated user files.
+Review repository changes, update your checkout, and reconcile links without reinstalling packages:
+
+```sh
+./install.sh --skip-tools
+./scripts/health-check.sh
+```
 
 ## Uninstallation
-
-The planned uninstaller is:
 
 ```sh
 ./uninstall.sh
 ```
 
-It will remove only links and configuration managed by Tilde. Persistent user data, including Atuin history, will remain untouched unless the user explicitly requests its deletion.
+Uninstall removes only links that still point to their recorded Tilde sources. Changed or unrelated paths, timestamped backups, Atuin history, other persistent data, and system packages are preserved. Backups are not restored automatically; inspect `${XDG_STATE_HOME:-$HOME/.local/state}/tilde/backups` and restore the desired version manually.
+
+## Health check
+
+```sh
+./scripts/health-check.sh
+```
+
+The check reports Zsh, Git, Atuin, zoxide, fzf, ripgrep, fd, bat, eza, jq, yq, lazygit, Neovim, and tmux. It exits nonzero when anything is missing.
+
+## Testing
+
+Run the Linux-native lifecycle test with:
+
+```sh
+bash ./tests/smoke.sh
+```
+
+It uses a temporary home directory to verify dry-run behavior, conflict backup, link creation, repeated setup, conservative uninstall, and Zsh startup when Zsh is installed. It never targets real user dotfiles.
 
 ## Troubleshooting
 
-A planned `./scripts/health-check.sh` command will report the availability of Zsh, Git, and every tool in the stack, then provide actionable installation guidance for anything missing.
+### A command is missing after installation
 
-Until implementation begins, please open an issue with your operating system, distribution, shell version, and the behavior you expected.
+Run the health check. Distribution releases differ, and newer tools such as Atuin, eza, or lazygit may not exist in an older configured repository. Use the tool's official package instructions rather than an unreviewed remote script.
+
+### `fd` or `bat` has a different name on Debian/Ubuntu
+
+Those distributions may install `fdfind` and `batcat`. During link setup, Tilde creates managed user-level command aliases in `~/.local/bin` when needed. Ensure that directory is in `PATH`.
+
+### Existing dotfiles disappeared
+
+They were moved, not deleted. Look under `${XDG_STATE_HOME:-$HOME/.local/state}/tilde/backups/<timestamp>/`.
+
+### tmux and Neovim navigation does not cross a boundary
+
+Confirm `ps` and `grep` are installed, reload tmux with `Ctrl+A`, `r`, and verify the current program name is recognizable as Neovim.
+
+### A search path contains a colon
+
+The V1 `frg` and Neovim text picker use ripgrep's colon-delimited output. Linux filenames may legally contain colons, but matches in such paths cannot be parsed reliably yet. Use `rg` directly for that uncommon case.
 
 ## Roadmap
 
-- [ ] Define and document the V1 architecture
-- [ ] Add safe backup and symlink management
-- [ ] Implement an idempotent Linux/WSL installer
-- [ ] Configure Zsh and the core CLI integrations
-- [ ] Add minimal Neovim and tmux configurations
-- [ ] Implement `ff`, `frg`, and the simple `dev` workflow
-- [ ] Add health checks and a conservative uninstaller
-- [ ] Validate clean and repeated installations
-- [ ] Add screenshots and a short demo
+- [x] Safe link ownership, backups, and conservative uninstall
+- [x] Lightweight Zsh and local-only Atuin configuration
+- [x] Integrated file, text, directory, Git, editor, and tmux workflows
+- [x] Minimal plugin-free Neovim configuration
+- [x] Health check and distribution-package installer
+- [ ] Validate on representative Ubuntu, Fedora, Arch, openSUSE, and WSL images
+- [ ] Add automated container-based installation tests
+- [ ] Add a screenshot and terminal recording
+- [ ] Evaluate optional tmux session persistence
 - [ ] Evaluate macOS support after V1 stabilizes
 
 ## Contributing
 
-Read [AGENTS.md](./AGENTS.md) before making changes. Keep contributions small, explain new dependencies, preserve user configuration, and document every custom command or binding.
+Read [AGENTS.md](AGENTS.md) before changing the project. Keep work scoped, explain new dependencies, preserve user configuration, and document every custom command and binding.
 
 ## License
 
-A license has not been selected yet. Add a `LICENSE` file before distributing a release.
+Tilde is available under the [MIT License](LICENSE).
