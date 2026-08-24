@@ -11,6 +11,8 @@ for file in install.sh uninstall.sh scripts/*.sh tests/*.sh; do
   bash -n "$file"
 done
 
+bash ./tests/compat-ownership.sh >/dev/null
+
 test_root=$(mktemp -d /tmp/tilde-test.XXXXXX)
 case "$test_root" in
   /tmp/tilde-test.*) ;;

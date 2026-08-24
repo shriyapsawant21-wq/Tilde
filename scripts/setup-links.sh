@@ -9,6 +9,18 @@ source "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)/lib.sh"
 dry_run=0
 [[ "${1:-}" == --dry-run ]] && dry_run=1
 
+recorded_link_source() {
+  local wanted_target=$1 recorded_target recorded_source
+  [[ -f "$TILDE_MANIFEST" && -L "$wanted_target" ]] || return 1
+  while IFS='|' read -r recorded_target recorded_source; do
+    if [[ "$recorded_target" == "$wanted_target" && "$(readlink -- "$wanted_target")" == "$recorded_source" ]]; then
+      printf '%s\n' "$recorded_source"
+      return 0
+    fi
+  done < "$TILDE_MANIFEST"
+  return 1
+}
+
 sources=(
   "$TILDE_ROOT/zsh/.zshrc"
   "$TILDE_ROOT/tmux/.tmux.conf"
@@ -28,9 +40,15 @@ targets=(
 if command_exists fdfind && { ! command_exists fd || [[ -L "$HOME/.local/bin/fd" && "$(readlink -- "$HOME/.local/bin/fd")" == "$(command -v fdfind)" ]]; }; then
   sources+=("$(command -v fdfind)")
   targets+=("$HOME/.local/bin/fd")
+elif source_path=$(recorded_link_source "$HOME/.local/bin/fd"); then
+  sources+=("$source_path")
+  targets+=("$HOME/.local/bin/fd")
 fi
 if command_exists batcat && { ! command_exists bat || [[ -L "$HOME/.local/bin/bat" && "$(readlink -- "$HOME/.local/bin/bat")" == "$(command -v batcat)" ]]; }; then
   sources+=("$(command -v batcat)")
+  targets+=("$HOME/.local/bin/bat")
+elif source_path=$(recorded_link_source "$HOME/.local/bin/bat"); then
+  sources+=("$source_path")
   targets+=("$HOME/.local/bin/bat")
 fi
 
@@ -39,7 +57,10 @@ fi
 for index in "${!sources[@]}"; do
   source_path=${sources[$index]}
   target=${targets[$index]}
-  [[ -e "$source_path" ]] || die "Missing managed source: $source_path"
+  if [[ ! -e "$source_path" ]]; then
+    [[ "$(recorded_link_source "$target" 2>/dev/null || true)" == "$source_path" ]] ||
+      die "Missing managed source: $source_path"
+  fi
   case "$target" in
     "$HOME"/*) ;;
     *) die "Refusing to manage a path outside HOME: $target" ;;
