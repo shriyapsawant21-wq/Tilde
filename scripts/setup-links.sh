@@ -124,10 +124,10 @@ for index in "${!sources[@]}"; do
         info "Would back up $target to $backup"
       else
         mkdir -p -- "$(dirname -- "$backup")"
-        mv -- "$target" "$backup"
         rollback_targets+=("$target")
         rollback_sources+=("$source_path")
         rollback_backups+=("$backup")
+        mv -- "$target" "$backup"
         success "Backed up: $target"
       fi
     elif (( dry_run == 0 )); then
